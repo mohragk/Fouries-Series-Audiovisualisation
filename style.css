@@ -1,7 +1,50 @@
-html, body {
-  margin: 0;
-  padding: 0;
+:root {
+    --main-slider-color: #005a84;
+    --main-slider-thmb-color: #f7fcff;
 }
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
 canvas {
-  display: block;
+    display: block;
+}
+
+input[type=range] {
+    -webkit-appearance: none;
+    width: 160px;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--main-slider-color);
+    outline: none;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+    cursor: pointer;
+}
+
+input[type=range]:focus {
+    outline: none;
+}
+
+
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--main-slider-thmb-color);
+    cursor: pointer;
+}
+
+input[type=range]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--main-slider-thmb-color);
+    cursor: pointer;
 }
