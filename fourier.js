@@ -174,7 +174,7 @@ function initAudio() {
     smoothedVolume.reset(150, 60);
 
     imm_updateAudioWaveform();
-    print("audio initialized");
+    console.log("audio initialized");
 }
 
 
@@ -200,7 +200,7 @@ function resetAudio() {
     osc.type = 'square';
     osc.start(0);
 
-    print("audio reset");
+    console.log("audio reset");
 
 }
 
