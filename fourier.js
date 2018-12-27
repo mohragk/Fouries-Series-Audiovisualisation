@@ -23,6 +23,7 @@ var gainNode;
 var osc;
 
 document.querySelector('button').addEventListener('click', function() {
+    console.log("clicked");
   audioContext.resume().then(() => {
     console.log('Playback resumed successfully');
   });
