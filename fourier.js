@@ -35,9 +35,7 @@ var oldType = -1;
 var it = 0;
 
 document.body.addEventListener("click", function(){
-    if(audioContext.state === 'suspended') {
-    	audioContext.resume();
-  	}
+    
 });
 
 
@@ -250,6 +248,9 @@ function updateAudio() {
 }
 
 function mouseReleased() {
+	if(audioContext.state === 'suspended') {
+    	audioContext.resume();
+  	}
     playBtn.clicked(mouseX, mouseY);
 }
 
