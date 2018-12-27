@@ -516,7 +516,7 @@ class playButton {
     constructor(position, size) {
         this.size = size;
         this.position = position;
-        this.isPlaying = true;
+        this.isPlaying = false;
 
         this.triShape = [];
 
