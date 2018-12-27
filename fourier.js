@@ -18,20 +18,17 @@ let shouldStartPlaying = false;
 
 var freqSlider, iterSlider, scalerSlider, volumeSlider, typeSlider;
 
+var audioContext;
 var gainNode;
 var osc;
 
 document.querySelector('button').addEventListener('click', function() {
-  context.resume().then(() => {
+  audioContext.resume().then(() => {
     console.log('Playback resumed successfully');
   });
 });
 
-window.onload = function() {
-  var audioContext = new AudioContext();
-  // Setup all nodes
-  ...
-}
+
 
 var waveType = {
     SQUARE: 0,
@@ -162,6 +159,7 @@ function updateSliders() {
 //AUDIO
 
 function initAudio() {
+	audioContext = new AudioContext();
     gainNode = audioContext.createGain();
     osc = audioContext.createOscillator();
 
