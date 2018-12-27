@@ -152,6 +152,21 @@ function updateSliders() {
 //AUDIO
 
 function initAudio() {
+	
+    try {
+        if (! window.AudioContext) {
+            if (! window.webkitAudioContext) {
+                bad_browser();
+                return;
+            }
+            window.AudioContext = window.webkitAudioContext;
+        }
+
+        audioContext = new AudioContext();
+    }
+    catch(e) {
+        console.log('Web Audio API is not supported in this browser');
+    }
     gainNode = audioContext.createGain();
     osc = audioContext.createOscillator();
 
