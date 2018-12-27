@@ -35,10 +35,6 @@ var oldType = -1;
 var it = 0;
 
 document.body.addEventListener("click", function(){
-   // if (audioContext.state === 'suspended')
-    //{ audioContext.resume(); }
-    
-    console.log("click");
     if(audioContext.state === 'suspended') {
     	audioContext.resume();
   	}
