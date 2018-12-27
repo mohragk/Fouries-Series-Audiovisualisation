@@ -154,7 +154,7 @@ function updateSliders() {
 //AUDIO
 
 function initAudio() {
-	
+	audioContext = new AudioContext();
     gainNode = audioContext.createGain();
     osc = audioContext.createOscillator();
 
