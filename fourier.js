@@ -18,9 +18,15 @@ let shouldStartPlaying = false;
 
 var freqSlider, iterSlider, scalerSlider, volumeSlider, typeSlider;
 
-var audioContext;
+var audioContext = new AudioContext();
 var gainNode;
 var osc;
+
+document.querySelector('button').addEventListener('click', function() {
+  context.resume().then(() => {
+    console.log('Playback resumed successfully');
+  });
+});
 
 var waveType = {
     SQUARE: 0,
@@ -151,22 +157,6 @@ function updateSliders() {
 //AUDIO
 
 function initAudio() {
-	
-    try {
-        if (! window.AudioContext) {
-            if (! window.webkitAudioContext) {
-                bad_browser();
-                return;
-            }
-            window.AudioContext = window.webkitAudioContext;
-        }
-
-        audioContext = new AudioContext();
-	console.log("audioContext created");
-    }
-    catch(e) {
-        console.log('Web Audio API is not supported in this browser');
-    }
     gainNode = audioContext.createGain();
     osc = audioContext.createOscillator();
 
