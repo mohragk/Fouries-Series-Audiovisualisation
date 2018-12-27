@@ -18,7 +18,7 @@ let shouldStartPlaying = false;
 
 var freqSlider, iterSlider, scalerSlider, volumeSlider, typeSlider;
 
-var audioContext = new AudioContext();
+var audioContext;
 var gainNode;
 var osc;
 
