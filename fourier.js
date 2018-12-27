@@ -22,12 +22,6 @@ var audioContext;
 var gainNode;
 var osc;
 
-document.querySelector('button').addEventListener('click', function() {
-    console.log("clicked");
-  audioContext.resume().then(() => {
-    console.log('Playback resumed successfully');
-  });
-});
 
 
 
@@ -53,9 +47,11 @@ function setup() {
     let v = createVector(width - size, height - size)
     playBtn = new playButton(v, 100);
     playBtn.addEventListener('click', function() {
-      context.resume().then(() => {
-        console.log('Playback resumed successfully');
-      });
+        console.log("clicked");
+
+        audioContext.resume().then(() => {
+            console.log('Playback resumed successfully');
+        });
     });
 
     radius = width / 8;
