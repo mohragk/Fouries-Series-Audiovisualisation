@@ -44,8 +44,13 @@ function setup() {
     fontSize = windowHeight / 60;
 
     let size = 100;
-    let v = createVector(width - size, height - size)
+    let v = createVector(width - size, height - size);
     playBtn = new playButton(v, 100);
+	playBtn.addEventListener('click', function() {
+        audioContext.resume().then(() => {
+            console.log('Playback resumed successfully');
+        });
+    });
 
     radius = width / 8;
 
