@@ -18,7 +18,6 @@ let shouldStartPlaying = false;
 
 var freqSlider, iterSlider, scalerSlider, volumeSlider, typeSlider;
 
-var AudioContext = window.AudioContext || window.webkitAudioContext;
 var audioContext = new AudioContext();
 var gainNode;
 var osc;
@@ -163,6 +162,7 @@ function initAudio() {
         }
 
         audioContext = new AudioContext();
+	console.log("audioContext created");
     }
     catch(e) {
         console.log('Web Audio API is not supported in this browser');
