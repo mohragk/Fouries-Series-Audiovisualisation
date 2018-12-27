@@ -51,6 +51,7 @@ function mouseWheel(event) {
         time += (event.delta / (1000  * shift_modifier)) * inc;
     }
 
+    console.log("mouse scrolling");
 }
 
 function setup() {
