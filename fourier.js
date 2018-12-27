@@ -5,8 +5,7 @@ let iterations = 30;
 let old_iterations = 0;
 let frequency = 0.8;
 let volume = 0.1;
-let smoothedFrequency;
-let smoothedVolume;
+
 let shouldRenderSquare = true;
 let zoom = 3; // between 1 and 6
 let radius = 75.0;
@@ -22,9 +21,6 @@ var audioContext;
 var gainNode;
 var osc;
 
-
-
-
 var waveType = {
     SQUARE: 0,
     SAW: 1,
@@ -36,6 +32,18 @@ var waveObjects = [];
 var currentType = waveType.SQUARE;
 var oldType = -1;
 
+var it = 0;
+
+document.addEventListener("click", function(){
+   // if (audioContext.state === 'suspended')
+    //{ audioContext.resume(); }
+    
+    
+    if(audioContext.state === 'suspended') {
+    	audioContext.resume();
+  	}
+});
+
 
 function setup() {
     createCanvas(windowWidth, windowHeight);
@@ -44,9 +52,9 @@ function setup() {
     fontSize = windowHeight / 60;
 
     let size = 100;
-    let v = createVector(width - size, height - size);
+    let v = createVector(width - size, height - size)
     playBtn = new playButton(v, 100);
-	
+
     radius = width / 8;
 
     waveObjects[0] = new squareWaveObject("SQUARE");
@@ -94,9 +102,9 @@ function draw() {
 
 function updateTime() {
     if (playBtn.isPlaying)
-        time += getPhaseInc(smoothedFrequency.getSmoothed());
+        time += getPhaseInc(frequency *10);
 
-    if (time >= 2 * PI)
+    while (time >= 2 * PI)
         time -= 2 * PI;
 }
 
@@ -142,8 +150,7 @@ function initSliders() {
 
 
 function updateSliders() {
-    smoothedFrequency.setValue(freqSlider.value() / 10);
-    smoothedVolume.setValue(volumeSlider.value() / 100);
+  
 
 
     iterations = iterSlider.value();
@@ -154,7 +161,7 @@ function updateSliders() {
 //AUDIO
 
 function initAudio() {
-	audioContext = new AudioContext();
+    audioContext = new AudioContext();
     gainNode = audioContext.createGain();
     osc = audioContext.createOscillator();
 
@@ -171,16 +178,10 @@ function initAudio() {
     gainNode.connect(audioContext.destination);
     // moogLPF.connect(audioContext.destination);
 
-    smoothedFrequency = new smoothParameter('frequency');
-    smoothedFrequency.reset(100, 60);
-
-    smoothedVolume = new smoothParameter('volume');
-    smoothedVolume.reset(150, 60);
+   
 
     imm_updateAudioWaveform();
-    
-    audioContext.resume();
-    console.log("audio initialized");
+    print("audio initialized");
 }
 
 
@@ -206,7 +207,7 @@ function resetAudio() {
     osc.type = 'square';
     osc.start(0);
 
-    console.log("audio reset");
+    print("audio reset");
 
 }
 
@@ -239,7 +240,7 @@ function updateAudio() {
     if (playBtn.isPlaying) {
         shouldStartPlaying = true;
     }
-
+    
 
     if (shouldStartPlaying) {
         var val = volumeSlider.value() / 100;
