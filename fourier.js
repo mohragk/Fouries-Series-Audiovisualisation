@@ -52,6 +52,11 @@ function setup() {
     let size = 100;
     let v = createVector(width - size, height - size)
     playBtn = new playButton(v, 100);
+    playBtn.addEventListener('click', function() {
+      context.resume().then(() => {
+        console.log('Playback resumed successfully');
+      });
+    });
 
     radius = width / 8;
 
