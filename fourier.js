@@ -32,12 +32,28 @@ var waveObjects = [];
 var currentType = waveType.SQUARE;
 var oldType = -1;
 
-var it = 0;
+function mouseWheel(event) {
 
-document.body.addEventListener("click", function(){
-    
-});
+    var OSName = "Unknown";
 
+    if (window.navigator.userAgent.indexOf("Windows NT 6.1") != -1) OSName="Windows 7";
+    if (window.navigator.userAgent.indexOf("Mac") != -1) OSName = "Mac";
+
+
+    if (playBtn.isPlaying == false) {
+        
+        
+        
+        if (OSName == "Windows 7")
+        {
+            time += (event.delta / (1000  * shift_modifier));
+        } else if (OSName == "Mac")
+        {
+            time -= (event.delta / (1000 * shift_modifier));
+        }
+    }
+
+}
 
 function setup() {
     createCanvas(windowWidth, windowHeight);
@@ -96,7 +112,7 @@ function draw() {
 
 function updateTime() {
     if (playBtn.isPlaying)
-        time += getPhaseInc(frequency *10);
+        time += getPhaseInc(frequency * 10);
 
     while (time >= 2 * PI)
         time -= 2 * PI;
@@ -117,7 +133,7 @@ function initSliders() {
 
     iterSlider = createSlider(1, 64, 2);
     iterSlider.position(20, 40);
-	iterSlider.input(imm_updateAudioWaveform);
+    iterSlider.input(imm_updateAudioWaveform);
     iterations = iterSlider.value();
 
 
@@ -144,7 +160,7 @@ function initSliders() {
 
 
 function updateSliders() {
-  
+
 
 
     iterations = iterSlider.value();
@@ -172,7 +188,7 @@ function initAudio() {
     gainNode.connect(audioContext.destination);
     // moogLPF.connect(audioContext.destination);
 
-   
+
 
     imm_updateAudioWaveform();
     print("audio initialized");
@@ -229,12 +245,13 @@ function changeType() {
 
 function updateAudio() {
 
-   // updateAudioWaveform();
+    if (!audioContext)
+        console.error("No audio context!");
 
     if (playBtn.isPlaying) {
         shouldStartPlaying = true;
     }
-    
+
 
     if (shouldStartPlaying) {
         var val = volumeSlider.value() / 100;
@@ -248,21 +265,36 @@ function updateAudio() {
 }
 
 function mouseReleased() {
-	if(audioContext.state === 'suspended') {
-    	audioContext.resume();
-  	}
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
     playBtn.clicked(mouseX, mouseY);
 }
 
 
-
+let shift_modifier = 1;
 
 function keyPressed() {
     if (keyCode == 32) {
         playBtn.spacebarHit();
     }
+    
+    if (keyCode == 16)
+    {
+        shift_modifier = 10;
+    }
 }
 
+
+function keyReleased()
+{
+    
+    if (keyCode == 16)
+    {
+        shift_modifier = 1;
+    }
+    
+}
 
 function updateAudioWaveform() {
 
