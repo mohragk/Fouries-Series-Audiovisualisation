@@ -18,7 +18,6 @@ let shouldStartPlaying = false;
 
 var freqSlider, iterSlider, scalerSlider, volumeSlider, typeSlider;
 
-var audioContext = new AudioContext();
 var gainNode;
 var osc;
 
@@ -27,6 +26,12 @@ document.querySelector('button').addEventListener('click', function() {
     console.log('Playback resumed successfully');
   });
 });
+
+window.onload = function() {
+  var audioContext = new AudioContext();
+  // Setup all nodes
+  ...
+}
 
 var waveType = {
     SQUARE: 0,
