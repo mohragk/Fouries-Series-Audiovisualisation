@@ -41,16 +41,14 @@ function mouseWheel(event) {
 
 
     if (playBtn.isPlaying == false) {
+        let inc = 1;
         
-        
-        
-        if (OSName == "Windows 7")
+        if (OSName == "Mac")
         {
-            time += (event.delta / (1000  * shift_modifier));
-        } else if (OSName == "Mac")
-        {
-            time -= (event.delta / (1000 * shift_modifier));
+            inc = -1;
         }
+
+        time += (event.delta / (1000  * shift_modifier)) * inc;
     }
 
 }
