@@ -46,13 +46,6 @@ function setup() {
     let size = 100;
     let v = createVector(width - size, height - size)
     playBtn = new playButton(v, 100);
-    playBtn.addEventListener('click', function() {
-        console.log("clicked");
-
-        audioContext.resume().then(() => {
-            console.log('Playback resumed successfully');
-        });
-    });
 
     radius = width / 8;
 
@@ -161,7 +154,7 @@ function updateSliders() {
 //AUDIO
 
 function initAudio() {
-	audioContext = new AudioContext();
+	
     gainNode = audioContext.createGain();
     osc = audioContext.createOscillator();
 
@@ -185,6 +178,8 @@ function initAudio() {
     smoothedVolume.reset(150, 60);
 
     imm_updateAudioWaveform();
+    
+    audioContext.resume();
     console.log("audio initialized");
 }
 
