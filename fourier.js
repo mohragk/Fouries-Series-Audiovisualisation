@@ -4,20 +4,29 @@ let time = 0;
 let iterations = 30;
 let old_iterations = 0;
 let frequency = 0.8;
+let audioFrequency = 440;
 let volume = 0.1;
+let angle = 0;
+let old_angle = angle;
+let deltaAngle = 0;
 
 let shouldRenderSquare = true;
 let zoom = 3; // between 1 and 6
 let radius = 75.0;
+let centreCircle;
+let mousedown = false;
 
 let typeText;
 let fontSize = 14;
 let playBtn;
 let shouldStartPlaying = false;
 
+let shouldBeHand = false;
+let shouldBeNoCursor = false;
+
 var freqSlider, iterSlider, scalerSlider, volumeSlider, typeSlider;
 
-var audioContext;
+var audioContext = null;
 var gainNode;
 var osc;
 
@@ -27,32 +36,12 @@ var waveType = {
     TRIANGLE: 2
 };
 
+
 var waveObjects = [];
 
 var currentType = waveType.SQUARE;
 var oldType = -1;
 
-function mouseWheel(event) {
-
-    var OSName = "Unknown";
-
-    if (window.navigator.userAgent.indexOf("Windows NT 6.1") != -1) OSName="Windows 7";
-    if (window.navigator.userAgent.indexOf("Mac") != -1) OSName = "Mac";
-
-
-    if (playBtn.isPlaying == false) {
-        let inc = 1;
-        
-        if (OSName == "Mac")
-        {
-            inc = -1;
-        }
-
-        time += (event.delta / (1000  * shift_modifier)) * inc;
-    }
-
-    console.log("mouse scrolling");
-}
 
 function setup() {
     createCanvas(windowWidth, windowHeight);
@@ -64,6 +53,8 @@ function setup() {
     let v = createVector(width - size, height - size)
     playBtn = new playButton(v, 100);
 
+    centreCircle = createVector(0, 0);
+
     radius = width / 8;
 
     waveObjects[0] = new squareWaveObject("SQUARE");
@@ -72,6 +63,8 @@ function setup() {
 
     initSliders();
     initAudio();
+    
+    frequency = freqSlider.value() / 100;
 
 }
 
@@ -94,7 +87,13 @@ function draw() {
 
 
     let margin = iterSlider.y;
+    let trans_x = width * 0.25;
+    let trans_y = height * 0.5 + margin;
+
+    centreCircle.x = trans_x;
+    centreCircle.y = trans_y;
     translate(width * 0.25, height * 0.5 + margin);
+
 
     stroke(30);
     line(0, 0, width, 0);
@@ -104,9 +103,13 @@ function draw() {
     drawWave();
 
 
+
+
     updateTime();
 
     updateAudio();
+
+    updateCursor();
 }
 
 function updateTime() {
@@ -116,6 +119,18 @@ function updateTime() {
     while (time >= 2 * PI)
         time -= 2 * PI;
 }
+
+function overrideAngle(p) {
+    let x_comp = mouseX - p.x;
+    let y_comp = p.y - mouseY;
+    let angle = atan2(y_comp, x_comp);
+
+    if (angle < 0)
+        angle = (2 * PI) + angle;
+
+    return (2 * PI) - angle;
+}
+
 
 function drawPlayButton() {
     let size = 100;
@@ -128,12 +143,13 @@ function drawPlayButton() {
 function initSliders() {
     freqSlider = createSlider(1, 40, 8, 0);
     freqSlider.position(20, 10);
-    freqSlider.input(changeFrequency);
+    freqSlider.input(updateSliderFrequency);
 
     iterSlider = createSlider(1, 64, 2);
     iterSlider.position(20, 40);
     iterSlider.input(imm_updateAudioWaveform);
     iterations = iterSlider.value();
+    //iterSlider.input(updateSliderIterations);
 
 
     volumeSlider = createSlider(0, 30, 6, 0);
@@ -141,14 +157,14 @@ function initSliders() {
         freqSlider.x + freqSlider.width + 140,
         freqSlider.y
     )
-    volumeSlider.input(changeVolume);
+    volumeSlider.input(updateSliderVolume);
 
     scalerSlider = createSlider(0, 2, 2);
     scalerSlider.position(
         volumeSlider.x,
         volumeSlider.y + 30
     );
-    scalerSlider.input(changeFrequency);
+    scalerSlider.input(updateSliderFrequency);
 
     typeSlider = createSlider(0, 2, 0);
     typeSlider.position(
@@ -159,18 +175,21 @@ function initSliders() {
 
 
 function updateSliders() {
-
-
-
     iterations = iterSlider.value();
-    frequency = freqSlider.value() / 100;
 }
 
 
 //AUDIO
+function getOrCreateContext() {
+  if (!audioContext) {
+    audioContext = new AudioContext();
+  }
+  return audioContext;
+  
+}
 
 function initAudio() {
-    audioContext = new AudioContext();
+    getOrCreateContext();
     gainNode = audioContext.createGain();
     osc = audioContext.createOscillator();
 
@@ -220,26 +239,49 @@ function resetAudio() {
 
 }
 
-function changeVolume() {
-    var val = volumeSlider.value() / 100;
-    gainNode.gain.setTargetAtTime(val, audioContext.currentTime, 0.1);
+function changeVolume(vol) {
+    
+    gainNode.gain.setTargetAtTime(vol, audioContext.currentTime, 0.1);
 }
 
-function changeFrequency() {
+function changeFrequency(f) {
+    osc.frequency.setTargetAtTime(f, audioContext.currentTime, 0.01);
+}
+
+
+
+function updateSliderFrequency() {
     let mult = pow(10, scalerSlider.value());
-    var val = (freqSlider.value() / 10) * mult;
-    osc.frequency.setTargetAtTime(val, audioContext.currentTime, 0.05);
+    audioFrequency = (this.value() / 10) * mult;
+    frequency = freqSlider.value() / 100;
+    
+    changeFrequency(audioFrequency);
+}
+
+function updateSliderVolume() {
+    var val = this.value() / 100;
+    changeVolume(val);
+}
+
+
+function changeFrequencyFromDelta(delta) {
+    let f = delta / 100;
+    changeFrequency(f);
+}
+
+
+function noteOn(midiVal) {
+    let f = getFrequencyForMidiNote(midiVal);
+    changeFrequency(f);
+}
+
+function getFrequencyForMidiNote(note) {
+    return pow(2, (note-69)/12) * 440;
 }
 
 function changeType() {
-    //osc.stop(audioContext.currentTime);
-    let newType = this.value();
-    if (currentType != newType) {
-        currentType = newType;
-    }
+    currentType = this.value();
     imm_updateAudioWaveform();
-    //osc.start(audioContext.currentTime +1);
-
 }
 
 function updateAudio() {
@@ -263,36 +305,127 @@ function updateAudio() {
 
 }
 
+
+function mouseWheel(event) {
+
+    var OSName = "Unknown";
+
+    if (window.navigator.userAgent.indexOf("Windows NT 6.1") != -1) OSName = "Windows 7";
+    if (window.navigator.userAgent.indexOf("Mac") != -1) OSName = "Mac";
+
+
+    if (playBtn.isPlaying == false) {
+
+        if (OSName != "Mac") {
+            time += (event.delta / (1000 * shift_modifier));
+        } else if (OSName == "Mac") {
+            time -= (event.delta / (1000 * shift_modifier));
+        }
+
+        gainNode.gain.setTargetAtTime(volumeSlider.value() / 100, audioContext.currentTime, 0.01);
+        changeFrequencyFromDelta(abs(event.delta) * 100);
+    }
+
+}
+
+
+
+
+function mousePressed() {
+    let d = dist(centreCircle.x, centreCircle.y, mouseX, mouseY);
+    if (d < radius * 2) {
+        mousedown = true;
+
+    } else {
+        mousedown = false;
+    }
+
+}
+
 function mouseReleased() {
     if (audioContext.state === 'suspended') {
         audioContext.resume();
     }
     playBtn.clicked(mouseX, mouseY);
+
+    mousedown = false;
+    changeFrequency(audioFrequency);
 }
 
 
 let shift_modifier = 1;
 
+var emulatedKeys = {
+    a: 60,
+    s: 62,
+    d: 64,
+    f: 65,
+    g: 67,
+    h: 69,
+    j: 71,
+    k: 72,
+}
+
+
+let octave = 0;
+
 function keyPressed() {
     if (keyCode == 32) {
         playBtn.spacebarHit();
     }
-    
-    if (keyCode == 16)
-    {
+
+    if (keyCode == 16) {
         shift_modifier = 10;
     }
+    
+    if (key == 'z')
+    {
+        octave -= 12;
+    }
+    
+    if (key == 'x' )
+    {
+        octave += 12;
+    }
+    
+    
+    if (emulatedKeys.hasOwnProperty(key))
+    {
+        let note = emulatedKeys[key] + octave; 
+        let f = getFrequencyForMidiNote(note);
+        
+        audioFrequency = f;
+        frequency = f / 1000;
+        
+        noteOn(note);
+        
+        
+    }
+    
 }
 
 
-function keyReleased()
-{
-    
-    if (keyCode == 16)
-    {
+function keyReleased() {
+
+    if (keyCode == 16) {
         shift_modifier = 1;
     }
-    
+
+}
+
+function updateCursor() {
+    cursor(ARROW);
+
+    if (shouldBeHand) {
+        cursor(HAND);
+    }
+
+    if (shouldBeNoCursor) {
+        noCursor();
+    }
+
+    shouldBeHand = false;
+    shouldBeNoCursor = false;
 }
 
 function updateAudioWaveform() {
@@ -348,7 +481,7 @@ function drawText() {
     text("frequency", freqSlider.x + freqSlider.width + spacing, freqSlider.y + 14);
     text("harmonics", iterSlider.x + iterSlider.width + spacing, iterSlider.y + 14);
     text("volume", volumeSlider.x + volumeSlider.width + spacing, volumeSlider.y + 14);
-    text("audio speed (1x, 2x, 4x)", scalerSlider.x + scalerSlider.width + spacing, scalerSlider.y + 14)
+    text("audio speed (1x, 10x, 100x)", scalerSlider.x + scalerSlider.width + spacing, scalerSlider.y + 14)
 
     text(waveObjects[currentType].getName(), typeSlider.x + typeSlider.width + spacing, typeSlider.y + 14);
 
@@ -362,9 +495,52 @@ function clearShapes() {
     waveShape = [];
 }
 
+function mouseInRange(v, rad) {
+
+
+
+    let d = abs(dist(mouseX, mouseY, v.x, v.y));
+    if (d < rad * 2) {
+        shouldBeHand = true;
+    }
+
+
+}
+
 function drawWave() {
     let x = 0.0;
     let y = 0.0;
+
+    mouseInRange(centreCircle, radius);
+
+    if (mousedown) {
+        time = overrideAngle(centreCircle);
+
+        shouldBeNoCursor = true;
+
+        let a = time;
+        let delta_a = abs(old_angle - a) * 1000;
+        old_angle = a;
+
+        if (deltaAngle > 0) {
+            changeVolume(volumeSlider.value() / 100);
+            
+        }
+
+        
+		changeFrequencyFromDelta(delta_a);
+
+        let d = dist(centreCircle.x, centreCircle.y, mouseX, mouseY);
+        stroke(120);
+        noFill();
+        //ellipse(0, 0, d*2)
+        line(0, 0, mouseX - centreCircle.x, mouseY - centreCircle.y);
+        ellipse(mouseX - centreCircle.x, mouseY - centreCircle.y, 8);
+    }
+
+
+
+    strokeWeight(1);
 
     for (i = 0; i < iterations; i++) {
         let old_x = x;
@@ -389,6 +565,7 @@ function drawWave() {
     let trans = radius + radius;
 
     translate(trans, 0);
+    strokeWeight(1)
     line(x - trans, y, 0, y);
     drawWaveshape();
 
@@ -424,6 +601,7 @@ function drawContourShape() {
 }
 
 function drawWaveshape() {
+    strokeWeight(1);
     beginShape();
     for (let i = 0; i < waveShape.length; i++) {
         vertex(i, waveShape[i]);
@@ -437,7 +615,6 @@ function drawWaveshape() {
 
 function drawEllipseAt(x, y, radius) {
     stroke(255);
-    strokeWeight(2);
     noFill();
     ellipse(x, y, radius * 2);
 }
@@ -545,6 +722,7 @@ class playButton {
         this.size = size;
         this.position = position;
         this.isPlaying = false;
+        this.mouseDown = false;
 
         this.triShape = [];
 
@@ -579,6 +757,7 @@ class playButton {
     }
 
     mouseOver(mX, mY) {
+
         let x = this.position.x;
         let y = this.position.y;
         let rad = this.size / 2;
@@ -587,9 +766,13 @@ class playButton {
 
         if (distance <= rad) {
             this.renderBorder();
-            cursor(HAND);
-        } else {
-            cursor(ARROW);
+            shouldBeHand = true;
+
+            this.mouseDown = false;
+
+            if (mouseIsPressed) {
+                this.mouseDown = true;
+            }
         }
     }
 
@@ -628,32 +811,46 @@ class playButton {
         stroke(255);
         strokeWeight(4);
         ellipse(this.position.x, this.position.y, this.size + 3);
+        strokeWeight(1);
+    }
+
+    drawStopSymbol(c) {
+        fill(c);
+        ellipse(this.position.x, this.position.y, this.size);
+        fill(255);
+        let margin = 64;
+        let s = (this.size) - margin;
+        let x = this.position.x - s / 2;
+        let y = this.position.y - s / 2;
+        rect(x, y, s, s);
+    }
+
+    drawPlaySymbol(c) {
+		fill(c);
+        ellipse(this.position.x, this.position.y, this.size);
+        fill(255);
+        this.calculateTriangle();
     }
 
 
     render() {
-        var c = color(122, 200, 0); // Define color 'c'
-
-
+        var c;
+         // Define color 'c'
+		var downColour = color(0, 153, 255);
+        var playColour = color(0, 204, 153);
+        var stopColour = color(255, 0, 0);
+        
         //this.clicked();
         fill(255);
         noStroke();
 
         if (!this.isPlaying) {
-            fill(c);
-            ellipse(this.position.x, this.position.y, this.size);
-            fill(255);
-            this.calculateTriangle();
+            c = this.mouseDown ? downColour : playColour;
+			this.drawPlaySymbol(c);
         } else {
-            c = color(255, 12, 0);
-            fill(c);
-            ellipse(this.position.x, this.position.y, this.size);
-            fill(255);
-            let margin = 64;
-            let s = (this.size) - margin;
-            let x = this.position.x - s / 2;
-            let y = this.position.y - s / 2;
-            rect(x, y, s, s);
+            c =  this.mouseDown ? downColour : stopColour;
+			this.drawStopSymbol(c);
+
         }
     }
 }
